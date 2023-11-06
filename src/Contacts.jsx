@@ -5,12 +5,17 @@ function Contacts() {
   const [contacts, setContacts] = useState();
   const [error, setError] = useState(false);
 
+  const [searchText, setSearchText] = useState("");
+
+  const [filteredContacts, setFilteredContacts] = useState([]);
+
   useEffect(() => {
     async function fetchContacts() {
       try {
         const res = await fetch("https://jsonplaceholder.typicode.com/users");
         const contacts = await res.json();
         setContacts(contacts);
+        setFilteredContacts(contacts);
       } catch (err) {
         setError(true);
       } finally {
@@ -19,6 +24,29 @@ function Contacts() {
     }
     fetchContacts();
   }, []);
+
+  function handleSearch(e) {
+    setSearchText(e.target.value);
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+
+    // filter the contacts based on the provided search text for the name
+    const filteredContacts = contacts.filter((contact) => {
+      // trim white spaces and convert to lowercase for case insensitive searches.
+      const search = searchText.trim().toLowerCase();
+
+      const { username, name } = contact;
+
+      return (
+        name.toLowerCase().includes(search) ||
+        username.toLowerCase().includes(search)
+      );
+    });
+
+    setFilteredContacts(filteredContacts);
+  }
 
   if (isLoading) {
     return <p>Loading contacts...</p>;
@@ -29,10 +57,23 @@ function Contacts() {
 
   return (
     <div>
-      <h1 id="contact-list">List of Contacts: {contacts.length}</h1>
+      <h1 id="contact-list">List of Contacts: {filteredContacts.length}</h1>
+      <form role="search" onSubmit={handleSubmit}>
+        <label htmlFor="search" className="visually-hidden">
+          Search by name or username
+        </label>
+        <input
+          id="search"
+          name="search"
+          placeholder="Search by name or username"
+          value={searchText}
+          onChange={handleSearch}
+        />
+        <button>Search</button>
+      </form>
       <ul className="contact_wrapper" aria-labelledby="contact-list">
-        {contacts.map((contact) => (
-          <li id={contact.id}>
+        {filteredContacts.map((contact) => (
+          <li key={contact.id}>
             <article className="contact_card">
               <div className="contact_name">
                 <h2>{contact.name}</h2>
